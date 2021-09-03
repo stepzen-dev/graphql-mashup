@@ -1,0 +1,40 @@
+service: graphql-mashup-testing
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  region: us-west-1
+  stage: dev
+  runtime: nodejs14.x
+  versionFunctions: false
+  lambdaHashingVersion: 20201221
+
+  httpApi:
+    cors:
+      allowedOrigins:
+        - '*'
+      allowedMethods:
+        - GET
+        - POST
+        - HEAD
+      allowedHeaders:
+        - Accept
+        - Authorization
+        - Content-Type
+
+functions:
+  endpoint:
+    handler: handler.start
+    events:
+      - httpApi:
+          path: '*'
+          method: '*'
+
+plugins:
+  - serverless-webpack
+
+custom:
+  webpack:
+    includeModules: false
+    packager: yarn
+    webpackConfig: ../../webpack.config.js
