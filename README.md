@@ -448,3 +448,5 @@ query ALL_QUERIES {
   }
 }
 ```
+
+<img width="967" alt="final-query-with-all-endpoints" src="https://user-images.githubusercontent.com/12433465/132060127-b539ecbd-cf16-4910-ac46-82cfdae241f6.png">
