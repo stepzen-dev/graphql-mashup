@@ -1,0 +1,11 @@
+type User {
+  id: Int!
+  name: String!
+}
+
+type Query {
+  users: [User!]!
+    @graphql(
+      endpoint:"https://stepzen-redwood-users.netlify.app/.netlify/functions/graphql"
+    )
+}

@@ -1,0 +1,57 @@
+type Store {
+  _id: ID!
+  name: String!
+}
+
+type StorePage {
+  data: [Store]!
+  after: String
+  before: String
+}
+
+input StoreInput {
+  name: String!
+}
+
+type Query {
+  findStoreByID(
+    id: ID!
+  ): Store
+    @graphql(
+      endpoint: "https://graphql.fauna.com/graphql"
+      configuration: "fauna_config"
+    )
+
+  allStores: StorePage!
+    @graphql(
+      endpoint: "https://graphql.fauna.com/graphql"
+      configuration: "fauna_config"
+    )
+}
+
+type Mutation {
+  createStore(
+    data: StoreInput!
+  ): Store!
+    @graphql(
+      endpoint: "https://graphql.fauna.com/graphql"
+      configuration: "fauna_config"
+    )
+
+  updateStore(
+    id: ID!
+    data: StoreInput!
+  ): Store
+    @graphql(
+      endpoint: "https://graphql.fauna.com/graphql"
+      configuration: "fauna_config"
+    )
+
+  deleteStore(
+    id: ID!
+  ): Store
+    @graphql(
+      endpoint: "https://graphql.fauna.com/graphql"
+      configuration: "fauna_config"
+    )
+}

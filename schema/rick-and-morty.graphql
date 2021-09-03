@@ -1,0 +1,17 @@
+type rick_Character {
+  id: ID
+  name: String
+  image: String
+}
+
+type rick_Characters {
+  results: [rick_Character]
+}
+
+type Query {
+  rick_characters: rick_Characters
+    @graphql(
+      endpoint: "https://rickandmortyapi.com/graphql"
+      prefix: { value: "rick_", includeRootOperations: true }
+    )
+}
