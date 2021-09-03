@@ -1,0 +1,12 @@
+schema
+  @sdl(
+    files: [
+      "schema/rick-and-morty.graphql"
+      "schema/storyblok.graphql"
+      "schema/fauna.graphql"
+      "schema/helix.graphql"
+      "schema/redwood.graphql"
+    ]
+  ) {
+  query: Query
+}
