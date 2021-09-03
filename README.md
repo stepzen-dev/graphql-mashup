@@ -1,3 +1,5 @@
+# [How to connect to public and private GraphQL APIs with StepZen's `@graphql` directive](https://www.youtube.com/watch?v=mftjgAZUd0Q)
+
 ## Outline
 
 * Create project structure
@@ -18,15 +20,6 @@
   * Run `FIND_STORE_BY_ID`
   * Run `UPDATE_STORE_NAME`
   * Run `DELETE_STORE`
-* GraphQL Helix
-  * Create project and install dependencies
-  * `app.js`
-  * `handler.js`
-  * `serverless.yml`
-  * `webpack.config.js`
-  * Run `serverless deploy`
-  * `helix.graphql`
-  * Run `HELLO_QUERY`
 * Redwood App
   * Create Users schema
   * Provision a PostgreSQL database with [Railway](http://railway.app/)
@@ -42,8 +35,8 @@
 ```bash
 mkdir -p graphql-mashup/schema
 cd graphql-mashup
-touch index.graphql schema/rick-and-morty.graphql schema/storyblok.graphql schema/fauna.graphql schema/helix.graphql schema/redwood.graphql
-echo 'config.yaml\nnode_modules\n.DS_Store\n.serverless\nyarn.lock' > .gitignore
+touch index.graphql schema/rick-and-morty.graphql schema/storyblok.graphql schema/fauna.graphql schema/redwood.graphql
+echo 'config.yaml\nnode_modules\n.DS_Store\nyarn.lock' > .gitignore
 ```
 
 ### `stepzen.config.json`
@@ -67,7 +60,6 @@ schema
       "schema/rick-and-morty.graphql"
       "schema/storyblok.graphql"
       "schema/fauna.graphql"
-      "schema/helix.graphql"
       "schema/redwood.graphql"
     ]
   ) {
@@ -110,7 +102,6 @@ query CHARACTERS_QUERY {
     results {
       id
       name
-      image
     }
   }
 }
@@ -169,7 +160,7 @@ type Content {
 }
 
 type Query {
-  postItems: PostItems
+  PostItems: PostItems
     @graphql(
       endpoint: "https://gapi.storyblok.com/v1/api"
       headers: [
@@ -336,230 +327,6 @@ mutation DELETE_STORE {
 }
 ```
 
-## GraphQL Helix
-
-### Create project and install dependencies
-
-```bash
-mkdir -p server/apps/express/src
-cd server
-yarn init -y
-yarn add express graphql-helix graphql serverless-http
-yarn add -D serverless-webpack webpack
-touch webpack.config.js
-cd apps/express
-touch src/app.js handler.js serverless.yml
-```
-
-### `app.js`
-
-```js
-// server/apps/express/src/app.js
-
-import express from "express"
-import {
-  getGraphQLParameters,
-  processRequest,
-  renderGraphiQL,
-  shouldRenderGraphiQL,
-} from "graphql-helix"
-import {
-  GraphQLObjectType,
-  GraphQLSchema,
-  GraphQLString,
-} from "graphql"
-
-const schema = new GraphQLSchema({
-  query: new GraphQLObjectType({
-    name: "Query",
-    fields: () => ({
-      hello: {
-        type: GraphQLString,
-        resolve: () => "Hello from GraphQL Helix!",
-      }
-    }),
-  }),
-})
-
-const app = express()
-
-app.use(express.json())
-
-app.use("/graphql", async (req, res) => {
-  const request = {
-    body: req.body,
-    headers: req.headers,
-    method: req.method,
-    query: req.query,
-  }
-
-  if (shouldRenderGraphiQL(request)) {
-    res.send(
-      renderGraphiQL()
-    )
-  }
-
-  else {
-    const {
-      operationName,
-      query,
-      variables
-    } = getGraphQLParameters(request)
-
-    const result = await processRequest({
-      operationName,
-      query,
-      variables,
-      request,
-      schema,
-    })
-
-    if (result.type === "RESPONSE") {
-      result.headers.forEach((
-        { name, value }
-      ) => res.setHeader(name, value))
-      
-      res.status(result.status)
-      res.json(result.payload)
-    }
-  }
-})
-
-const port = process.env.PORT || 4000
-
-app.listen(port, () => {
-  console.log(`GraphQL server is running on port ${port}.`)
-})
-
-export default app;
-```
-
-### `handler.js`
-
-```js
-// server/apps/express/handler.js
-
-import * as serverless from 'serverless-http';
-import app from './src/app';
-
-const handler = serverless(app);
-
-export const start = async (event, context) => {
-  const result = await handler(event, context);
-
-  return result;
-};
-```
-
-### `serverless.yml`
-
-```yaml
-# server/apps/express/serverless.yml
-
-service: graphql-mashup
-frameworkVersion: '2'
-
-provider:
-  name: aws
-  region: us-west-1
-  stage: dev
-  runtime: nodejs14.x
-  versionFunctions: false
-  lambdaHashingVersion: 20201221
-
-  httpApi:
-    cors:
-      allowedOrigins:
-        - '*'
-      allowedMethods:
-        - GET
-        - POST
-        - HEAD
-      allowedHeaders:
-        - Accept
-        - Authorization
-        - Content-Type
-
-functions:
-  endpoint:
-    handler: handler.start
-    events:
-      - httpApi:
-          path: '*'
-          method: '*'
-
-plugins:
-  - serverless-webpack
-
-custom:
-  webpack:
-    includeModules: false
-    packager: yarn
-    webpackConfig: ../../webpack.config.js
-```
-
-### `webpack.config.js`
-
-```js
-// server/webpack.config.js
-
-const path = require('path');
-const slsw = require('serverless-webpack');
-
-module.exports = {
-  entry: slsw.lib.entries,
-  mode: 'production',
-  target: 'node',
-  module: {
-    rules: [
-      {
-        test: /\.ts$/,
-        exclude: /node_modules/,
-      },
-      {
-        test: /\.m?js/,
-        resolve: {
-          fullySpecified: false,
-        },
-      },
-    ],
-  },
-  output: {
-    libraryTarget: 'commonjs',
-    path: path.resolve('.webpack'),
-    filename: '[name].js',
-  },
-  resolve: {
-    extensions: ['.js', '.ts', '.mjs'],
-  },
-};
-```
-
-### Run `serverless deploy`
-
-```bash
-serverless deploy
-```
-
-### `helix.graphql`
-
-```graphql
-type Query {
-  hello: String
-    @graphql(
-      endpoint:""
-    )
-}
-```
-
-### Run `HELLO_QUERY`
-
-```graphql
-query HELLO_QUERY {
-  hello
-}
-```
-
 ## Redwood App
 
 ```bash
@@ -674,8 +441,6 @@ query ALL_QUERIES {
     _id
     name
   }
-  
-  hello
   
   users {
     name

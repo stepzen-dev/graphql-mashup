@@ -1,0 +1,24 @@
+type PostItems {
+  items: [PostItem]
+}
+
+type PostItem {
+  name: String
+  content: Content
+}
+
+type Content {
+  title: String
+  intro: String
+}
+
+type Query {
+  PostItems: PostItems
+    @graphql(
+      endpoint: "https://gapi.storyblok.com/v1/api"
+      headers: [
+        { name:"Token" value:"$token" }
+      ]
+      configuration: "storyblok_config"
+    )
+}

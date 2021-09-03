@@ -1,0 +1,7 @@
+configurationset:
+  - configuration:
+      name: storyblok_config
+      token: xxxx
+  - configuration:
+      name: fauna_config
+      Authorization: Basic MY_FAUNA_KEY
